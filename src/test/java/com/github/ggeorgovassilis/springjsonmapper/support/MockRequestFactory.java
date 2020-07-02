@@ -146,6 +146,11 @@ public class MockRequestFactory implements ClientHttpRequestFactory {
 			return sb.toString();
 		}
 
+		@Override
+		public String getMethodValue() {
+			return this.method.name();
+		}
+
 	}
 
 	private ThreadLocal<MockRequest> lastRequest = new ThreadLocal<MockRequestFactory.MockRequest>();
