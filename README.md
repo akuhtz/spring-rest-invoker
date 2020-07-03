@@ -1,6 +1,4 @@
-image:https://travis-ci.org/akuhtz/spring-rest-invoker.svg?branch=master["Build Status", link="https://travis-ci.org/akuhtz/spring-rest-invoker"]
-
-
+[![Build Status](https://travis-ci.org/akuhtz/spring-rest-invoker.svg?branch=master)](https://travis-ci.org/akuhtz/spring-rest-invoker)
 
 spring-rest-invoker
 ===================
@@ -62,7 +60,7 @@ TBD       : Not released yet: corrections in documentation, example for annotati
 
 ### Building
 
-```git clone https://github.com/ggeorgovassilis/spring-rest-invoker```
+```git clone https://github.com/akuhtz/spring-rest-invoker```
 
 ```mvn clean install jxr:jxr pmd:pmd pmd:cpd surefire-report:report site```
 
