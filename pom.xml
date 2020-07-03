@@ -28,8 +28,8 @@
 		</developer>
 	</developers>
 	<scm>
-		<connection>scm:git:https://akuhtz@github.com/ggeorgovassilis/spring-rest-invoker.git</connection>
-		<developerConnection>scm:git:https://akuhtz@github.com/ggeorgovassilis/spring-rest-invoker.git</developerConnection>
+		<connection>scm:git:https://akuhtz@github.com/akuhtz/spring-rest-invoker.git</connection>
+		<developerConnection>scm:git:https://akuhtz@github.com/akuhtz/spring-rest-invoker.git</developerConnection>
 		<url>http://github.com/akuhtz/spring-rest-invoker/tree/master</url>
 	</scm>
 	<distributionManagement>
