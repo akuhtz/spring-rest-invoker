@@ -1,16 +1,31 @@
 package com.github.ggeorgovassilis.springjsonmapper.tests;
 
+import static com.github.ggeorgovassilis.springjsonmapper.support.Utils.get;
+import static com.github.ggeorgovassilis.springjsonmapper.support.Utils.sget;
+import static com.github.ggeorgovassilis.springjsonmapper.tests.Factory.account;
+import static com.github.ggeorgovassilis.springjsonmapper.tests.Factory.customer;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.Resource;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.client.RestTemplate;
 
 import com.github.ggeorgovassilis.springjsonmapper.BaseRestInvokerProxyFactoryBean;
@@ -22,10 +37,6 @@ import com.github.ggeorgovassilis.springjsonmapper.support.MockRequestFactory;
 import com.github.ggeorgovassilis.springjsonmapper.support.MockRequestFactory.MockRequest;
 import com.github.ggeorgovassilis.springjsonmapper.support.MockRequestFactory.MockResponse;
 
-import static org.junit.Assert.*;
-import static com.github.ggeorgovassilis.springjsonmapper.support.Utils.*;
-import static com.github.ggeorgovassilis.springjsonmapper.tests.Factory.*;
-
 /**
  * Tests a more complex scenario with recorded HTTP requests and responses using
  * the {@link SpringRestInvokerProxyFactoryBean}
@@ -33,7 +44,8 @@ import static com.github.ggeorgovassilis.springjsonmapper.tests.Factory.*;
  * @author george georgovassilis
  * 
  */
-@RunWith(value = SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
+@TestInstance(Lifecycle.PER_CLASS)
 public abstract class AbstractBankServiceTest {
 
 	@Resource(name="BankService")
@@ -50,10 +62,12 @@ public abstract class AbstractBankServiceTest {
 		return response;
 	}
 
-	@Before
+	@BeforeAll
 	public void setup() {
 		requestFactory = new MockRequestFactory();
 		RestTemplate restTemplate = new RestTemplate(requestFactory);
+//		restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+		
 		httpProxyFactory.setRestTemplate(restTemplate);
 		requestFactory.createResponse();
 	}
@@ -278,7 +292,7 @@ public abstract class AbstractBankServiceTest {
 		// execute test
 		List<Account> results = bankService.getAllAccounts();
 		assertEquals(2, results.size());
-		assertTrue("Item is expected to be an instance of Account", results.get(0) instanceof Account);
+		assertTrue(results.get(0) instanceof Account, "Item is expected to be an instance of Account");
 		assertEquals("41", results.get(0).getAccountNumber());
 
 		// validate request

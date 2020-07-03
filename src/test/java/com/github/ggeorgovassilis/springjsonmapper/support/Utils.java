@@ -16,7 +16,9 @@ public class Utils {
 	}
 
 	public static String sget(String classpathResource) throws Exception {
-		return new String(get(classpathResource), "UTF-8");
+		String content = new String(get(classpathResource), "UTF-8");
+		
+		return content.replaceAll("\r\n", "\n");
 	}
 
 }

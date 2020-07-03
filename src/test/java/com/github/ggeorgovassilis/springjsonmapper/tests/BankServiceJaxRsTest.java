@@ -2,6 +2,7 @@ package com.github.ggeorgovassilis.springjsonmapper.tests;
 
 import org.springframework.test.context.ContextConfiguration;
 
+import com.github.ggeorgovassilis.springjsonmapper.jaxrs.JaxRsInvokerProxyFactoryBean;
 import com.github.ggeorgovassilis.springjsonmapper.services.jaxrs.BankServiceJaxRs;
 
 /**

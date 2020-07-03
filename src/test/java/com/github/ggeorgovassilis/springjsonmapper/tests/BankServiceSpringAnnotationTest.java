@@ -5,8 +5,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.test.context.ContextConfiguration;
 
-import com.github.ggeorgovassilis.springjsonmapper.jaxrs.JaxRsInvokerProxyFactoryBean;
-import com.github.ggeorgovassilis.springjsonmapper.services.jaxrs.BankServiceJaxRs;
 import com.github.ggeorgovassilis.springjsonmapper.services.spring.BankServiceSpring;
 import com.github.ggeorgovassilis.springjsonmapper.spring.SpringRestInvokerProxyFactoryBean;
 

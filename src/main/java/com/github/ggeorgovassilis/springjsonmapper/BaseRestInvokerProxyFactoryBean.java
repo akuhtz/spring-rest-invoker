@@ -3,17 +3,33 @@ package com.github.ggeorgovassilis.springjsonmapper;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.Proxy;
+import java.net.ProxySelector;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.http.HttpHost;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ReflectionUtils;
@@ -28,9 +44,11 @@ import com.github.ggeorgovassilis.springjsonmapper.model.MethodParameterDescript
 import com.github.ggeorgovassilis.springjsonmapper.model.MethodParameterDescriptor.Type;
 import com.github.ggeorgovassilis.springjsonmapper.model.UrlMapping;
 import com.github.ggeorgovassilis.springjsonmapper.spring.SpringRestInvokerProxyFactoryBean;
-import com.github.ggeorgovassilis.springjsonmapper.utils.CglibProxyFactory;
 import com.github.ggeorgovassilis.springjsonmapper.utils.DynamicJavaProxyFactory;
 import com.github.ggeorgovassilis.springjsonmapper.utils.ProxyFactory;
+import com.github.markusbernhardt.proxy.ProxySearch;
+
+import net.bytebuddy.asm.Advice.This;
 
 /**
  * Base component for proxy factories that bind java interfaces to a remote REST
@@ -49,6 +67,8 @@ import com.github.ggeorgovassilis.springjsonmapper.utils.ProxyFactory;
  */
 public abstract class BaseRestInvokerProxyFactoryBean
 		implements FactoryBean<Object>, InvocationHandler, EmbeddedValueResolverAware {
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(BaseRestInvokerProxyFactoryBean.class);
 
 	protected Class<?> remoteServiceInterfaceClass;
 	protected String remoteServiceInterfaceClassName;
@@ -165,7 +185,57 @@ public abstract class BaseRestInvokerProxyFactoryBean
 	}
 
 	protected RestTemplate constructDefaultRestTemplate() {
-		RestTemplate restTemplate = new RestTemplate();
+		
+		CredentialsProvider credsProvider = null;
+		// TODO add support for proxy credentials if required
+		
+        HttpHost myProxy = null;
+        try {
+	        Proxy proxy = findProxy(new URL(baseUrl).toURI());
+	        if (!Proxy.NO_PROXY.equals(proxy)) {
+	            try {
+	                InetSocketAddress addr = (InetSocketAddress) proxy.address();
+	                final String proxyUrl = addr.getHostName();
+	                final int port = addr.getPort();
+	
+	                // check if the provided host is resolvable
+	                try {
+	                    InetAddress.getByName(proxyUrl);
+	
+	                    myProxy = new HttpHost(proxyUrl, port);
+	                }
+	                catch (UnknownHostException e) {
+	                    LOGGER.warn("The proxy host is not resolvable. Fallback to NO_PROXY.", e);
+	                }
+	
+	            }
+	            catch (Exception ex) {
+	                LOGGER.warn("Prepare proxy HttpHost failed.", ex);
+	            }
+	        }
+        }
+        catch (URISyntaxException | MalformedURLException ex) {
+        	LOGGER.warn("Prepare proxy HttpHost failed. The baseUrl is not valid: {}", this.baseUrl, ex);
+		}
+
+        HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+
+        if (myProxy != null) {
+            clientBuilder.setProxy(myProxy);
+            if (credsProvider != null) {
+                clientBuilder.setDefaultCredentialsProvider(credsProvider);
+            }
+        }
+        
+        HttpClient httpClient = clientBuilder.build();
+        HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+        factory.setHttpClient(httpClient);
+
+        RestTemplate restTemplate = new RestTemplate(factory);
+
+
+		
+//		RestTemplate restTemplate = new RestTemplate();
 		return restTemplate;
 	}
 
@@ -391,4 +461,37 @@ public abstract class BaseRestInvokerProxyFactoryBean
 			}
 		};
 	}
+	
+    private static Proxy findProxy(URI uri) throws URISyntaxException {
+
+        // Use the static factory method getDefaultProxySearch to create a proxy search instance
+        // configured with the default proxy search strategies for the current environment.
+        ProxySearch proxySearch = ProxySearch.getDefaultProxySearch();
+
+        // Invoke the proxy search. This will create a ProxySelector with the detected proxy settings.
+        ProxySelector proxySelector = proxySearch.getProxySelector();
+
+        if (proxySelector != null) {
+            // Install this ProxySelector as default ProxySelector for all connections.
+            ProxySelector.setDefault(proxySelector);
+
+            Proxy proxy = ProxySelector.getDefault().select(uri).iterator().next();
+
+            InetSocketAddress addr = (InetSocketAddress) proxy.address();
+            if (addr == null) {
+                LOGGER.info("No Proxy");
+            }
+            else {
+                LOGGER.info("proxy hostname: {}", addr.getHostName());
+                LOGGER.info("proxy port: {}", addr.getPort());
+
+                return proxy;
+            }
+        }
+        else {
+            LOGGER.info("No proxy selector available.");
+        }
+        return Proxy.NO_PROXY;
+    }
+
 }
