@@ -2,6 +2,10 @@ language: java
 install: true
 sudo: false
 
+cache:
+ directories:
+   - $HOME/.m2/repository
+
 jdk:
   - openjdk8
 
@@ -9,16 +13,17 @@ env:
   global:
     - MVN_VERSION="3.6.3"
 
-before_install:
+# Each job in Travis CI has several steps:
+# https://docs.travis-ci.com/user/job-lifecycle/
+# The 'language: java' directive sets up sane defaults to test common java applications
+# We use the defaults for installing dependencies, compiling and testing maven applications
+# In our case it will be 'mvn install' followed by 'mvn test'
 
-install:
-  - mvn -version
-  - mvn -U clean verify
+# This is to enable CodeCov's coverage
+# If a build is successful, the code is submitted for coverage analysis
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
 
-
-cache:
- directories:
-   - $HOME/.m2/repository
 
 notifications:
   email: true

@@ -1,4 +1,5 @@
-<img src="https://travis-ci.org/ggeorgovassilis/spring-rest-invoker.svg"/>
+image:https://travis-ci.org/akuhtz/spring-rest-invoker.svg?branch=master["Build Status", link="https://travis-ci.org/akuhtz/spring-rest-invoker"]
+
 
 
 spring-rest-invoker
